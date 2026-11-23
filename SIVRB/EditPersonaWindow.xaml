@@ -1,0 +1,126 @@
+﻿<Window x:Class="SIVRB.Views.EditPersonaWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Editar Persona"
+        Height="480" Width="420"
+        WindowStartupLocation="CenterOwner"
+        Background="#0a0e1a"
+        FontFamily="Segoe UI"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="BgCardBrush" Color="#151c2e"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#1e293b"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#f1f5f9"/>
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#475569"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#3b82f6"/>
+        <SolidColorBrush x:Key="AccentDimBrush" Color="#1d4ed8"/>
+
+        <Style x:Key="DarkTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentDimBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Titulo -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Editar Persona" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+            <TextBlock Text="Modifique los datos y presione Guardar" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Formulario -->
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="DNI" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtDNI" Style="{StaticResource DarkTextBox}" FontFamily="Consolas" MaxLength="8" Margin="0,0,0,12"/>
+
+            <TextBlock Text="NOMBRE COMPLETO" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtNombre" Style="{StaticResource DarkTextBox}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="DIRECCION" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtDireccion" Style="{StaticResource DarkTextBox}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="TELEFONO" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtTelefono" Style="{StaticResource DarkTextBox}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="MOTIVO DE REGISTRO" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtMotivo" Style="{StaticResource DarkTextBox}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="OBSERVACIONES" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtObservaciones" Style="{StaticResource DarkTextBox}" Height="50" TextWrapping="Wrap" AcceptsReturn="True"/>
+        </StackPanel>
+
+        <!-- Botones -->
+        <Grid Grid.Row="2" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="BtnGuardar" Grid.Column="0" Content="💾 Guardar Cambios"
+                    Foreground="White" FontWeight="SemiBold" FontSize="12" Cursor="Hand" Margin="0,0,8,0"
+                    Click="BtnGuardar_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="8" Padding="16,10">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#3b82f6" Offset="0"/>
+                                    <GradientStop Color="#6366f1" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <Button x:Name="BtnCancelar" Grid.Column="1" Content="Cancelar"
+                    Foreground="#94a3b8" FontSize="12" Cursor="Hand"
+                    Click="BtnCancelar_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="8" Padding="16,10" Background="Transparent"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource BgCardBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

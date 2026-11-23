@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Assets/Assets.csproj" />
+  <Project Path="Data/Data.csproj" />
+  <Project Path="Helpers/Helpers.csproj" />
+  <Project Path="Models/Models.csproj" />
+  <Project Path="Services/Services.csproj" />
+  <Project Path="SIVRB/Views.csproj" />
+  <Project Path="ViewModels/ViewModels.csproj" />
+</Solution>
