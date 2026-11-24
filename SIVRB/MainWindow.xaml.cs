@@ -12,10 +12,13 @@ public partial class MainWindow : Window
 	public MainWindow()
 	{
 		InitializeComponent();
+		// Unico ViewModel de la ventana (antes el XAML creaba otro y el lector se inicializaba dos veces)
 		MainViewModel mainViewModel = new MainViewModel();
 		mainViewModel.RegistroModalSolicitado += AbrirRegistroModal;
 		mainViewModel.RegistroModalCierreSolicitado += CerrarRegistroModal;
 		DataContext = mainViewModel;
+		// Al cerrar (incluido "Cerrar sesión") se libera el lector para que la nueva ventana pueda abrirlo
+		Closed += (object? _, EventArgs _) => mainViewModel.LiberarRecursos();
 	}
 
 	private void AbrirRegistroModal()
@@ -60,6 +63,8 @@ public partial class MainWindow : Window
 
 	private void BtnCerrarSesion_Click(object sender, RoutedEventArgs e)
 	{
+		// Liberar el lector antes de que la nueva ventana intente abrirlo
+		(DataContext as MainViewModel)?.LiberarRecursos();
 		SesionActual.Usuario = null;
 		Application.Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 		LoginWindow loginWindow = new LoginWindow();

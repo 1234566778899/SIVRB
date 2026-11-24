@@ -168,6 +168,7 @@ public class MainViewModel : BaseViewModel
 		set
 		{
 			SetProperty(ref _personas, value, "Personas");
+			OnPropertyChanged("SinResultadosBusqueda");
 		}
 	}
 
@@ -180,6 +181,7 @@ public class MainViewModel : BaseViewModel
 		set
 		{
 			SetProperty(ref _personaSeleccionada, value, "PersonaSeleccionada");
+			CommandManager.InvalidateRequerySuggested();
 			OnPropertyChanged("PersonaSeleccionadaVisible");
 			OnPropertyChanged("SeleccionadaTieneRequisitoria");
 			OnPropertyChanged("SeleccionadaSinRequisitoria");
@@ -221,8 +223,16 @@ public class MainViewModel : BaseViewModel
 		set
 		{
 			SetProperty(ref _totalRegistrados, value, "TotalRegistrados");
+			OnPropertyChanged("SinRegistros");
+			OnPropertyChanged("SinResultadosBusqueda");
 		}
 	}
+
+	/// <summary>No hay ninguna persona registrada en el sistema (estado vacio).</summary>
+	public bool SinRegistros => TotalRegistrados == 0;
+
+	/// <summary>Hay registros, pero la busqueda actual no devolvio resultados.</summary>
+	public bool SinResultadosBusqueda => TotalRegistrados > 0 && (Personas == null || Personas.Count == 0);
 
 	public int TotalRequisitorias
 	{
@@ -281,6 +291,8 @@ public class MainViewModel : BaseViewModel
 		set
 		{
 			SetProperty(ref _sensorConectado, value, "SensorConectado");
+			// Habilita/deshabilita los botones que dependen del sensor
+			CommandManager.InvalidateRequerySuggested();
 		}
 	}
 
@@ -348,6 +360,103 @@ public class MainViewModel : BaseViewModel
 	}
 
 	public bool ModoRegistroActivo => !ModoVerificacionActivo;
+
+	private bool _capturaRegistroFallida;
+
+	/// <summary>True cuando la ultima captura de huella para registro fallo (muestra "Reintentar").</summary>
+	public bool CapturaRegistroFallida
+	{
+		get => _capturaRegistroFallida;
+		set => SetProperty(ref _capturaRegistroFallida, value, "CapturaRegistroFallida");
+	}
+
+	// ===== Estado del formulario de registro =====
+	// Separado de EstadoVerificacion para que el panel de verificacion (Operaciones)
+	// no muestre textos del formulario de registro y viceversa.
+
+	private string _estadoRegistro = "Registro";
+	private string _estadoRegistroDetalle = "Capture la huella y complete los datos";
+	private string _mensajeRegistro = string.Empty;
+	private string _mensajeRequisitoria = string.Empty;
+	private bool _capturandoRegistro;
+
+	public string EstadoRegistro
+	{
+		get => _estadoRegistro;
+		set => SetProperty(ref _estadoRegistro, value, "EstadoRegistro");
+	}
+
+	public string EstadoRegistroDetalle
+	{
+		get => _estadoRegistroDetalle;
+		set => SetProperty(ref _estadoRegistroDetalle, value, "EstadoRegistroDetalle");
+	}
+
+	/// <summary>Error de validacion del formulario de registro (se muestra dentro del formulario).</summary>
+	public string MensajeRegistro
+	{
+		get => _mensajeRegistro;
+		set => SetProperty(ref _mensajeRegistro, value, "MensajeRegistro");
+	}
+
+	/// <summary>Error de validacion del formulario de requisitoria (se muestra dentro del formulario).</summary>
+	public string MensajeRequisitoria
+	{
+		get => _mensajeRequisitoria;
+		set => SetProperty(ref _mensajeRequisitoria, value, "MensajeRequisitoria");
+	}
+
+	// ===== Datos para el panel (dashboard) y estados vacios =====
+
+	private ObservableCollection<Persona> _personasRecientes = new ObservableCollection<Persona>();
+	private bool _hayRegistrosPorMes;
+	private bool _hayVerificacionesPorDia;
+	private bool _hayRegistrosPorMotivo;
+
+	/// <summary>Ultimos 5 registros, para el panel. La lista completa esta en Operaciones.</summary>
+	public ObservableCollection<Persona> PersonasRecientes
+	{
+		get => _personasRecientes;
+		set => SetProperty(ref _personasRecientes, value, "PersonasRecientes");
+	}
+
+	public bool HayRegistrosPorMes
+	{
+		get => _hayRegistrosPorMes;
+		set => SetProperty(ref _hayRegistrosPorMes, value, "HayRegistrosPorMes");
+	}
+
+	public bool HayVerificacionesPorDia
+	{
+		get => _hayVerificacionesPorDia;
+		set => SetProperty(ref _hayVerificacionesPorDia, value, "HayVerificacionesPorDia");
+	}
+
+	public bool HayRegistrosPorMotivo
+	{
+		get => _hayRegistrosPorMotivo;
+		set => SetProperty(ref _hayRegistrosPorMotivo, value, "HayRegistrosPorMotivo");
+	}
+
+	/// <summary>Libera el lector de huellas. Se llama al cerrar la ventana principal.</summary>
+	public void LiberarRecursos()
+	{
+		_fp.Dispose();
+	}
+
+	private void ActualizarEstadoInicialVerificacion()
+	{
+		if (SensorConectado)
+		{
+			EstadoVerificacion = "Listo para verificar";
+			EstadoVerificacionDetalle = "Presione «Verificar huella» y coloque el dedo en el sensor";
+		}
+		else
+		{
+			EstadoVerificacion = "Sensor desconectado";
+			EstadoVerificacionDetalle = "Conecte el lector ZK4500 y reinicie la aplicación para verificar huellas";
+		}
+	}
 
 	public Persona? PersonaVerificada
 	{
@@ -469,9 +578,9 @@ public class MainViewModel : BaseViewModel
 		{
 			if (!ModoEdicion)
 			{
-				return "REGISTRAR NUEVA PERSONA";
+				return "Registrar nueva persona";
 			}
-			return "EDITAR PERSONA";
+			return "Editar persona";
 		}
 	}
 
@@ -481,9 +590,9 @@ public class MainViewModel : BaseViewModel
 		{
 			if (!ModoEdicion)
 			{
-				return "Guardar Registro";
+				return "Guardar registro";
 			}
-			return "Guardar Cambios";
+			return "Guardar cambios";
 		}
 	}
 
@@ -519,9 +628,9 @@ public class MainViewModel : BaseViewModel
 		{
 			if (!ModoEdicionRequisitoria)
 			{
-				return "NUEVA REQUISITORIA";
+				return "Nueva requisitoria";
 			}
-			return "EDITAR REQUISITORIA";
+			return "Editar requisitoria";
 		}
 	}
 
@@ -531,9 +640,9 @@ public class MainViewModel : BaseViewModel
 		{
 			if (!ModoEdicionRequisitoria)
 			{
-				return "Registrar Requisitoria";
+				return "Registrar requisitoria";
 			}
-			return "Actualizar Requisitoria";
+			return "Actualizar requisitoria";
 		}
 	}
 
@@ -646,26 +755,43 @@ public class MainViewModel : BaseViewModel
 		_db = new DatabaseService();
 		_fp = new FingerprintService();
 		_vistaActual = (SesionActual.EsAdministrador ? "Dashboard" : "Operaciones");
+		// Los mensajes del sensor van al panel que inicio la captura:
+		// el formulario de registro o el panel de verificacion.
 		_fp.OnEstadoCambiado += (object? s, string msg) =>
 		{
 			Application.Current.Dispatcher.Invoke(() =>
 			{
-				EstadoSensor = msg;
-				EstadoVerificacion = msg;
+				if (_capturandoRegistro)
+				{
+					EstadoRegistro = msg;
+				}
+				else
+				{
+					EstadoVerificacion = msg;
+				}
 			});
 		};
 		_fp.OnError += (object? s, string msg) =>
 		{
 			Application.Current.Dispatcher.Invoke(() =>
 			{
-				EstadoVerificacion = "Error: " + msg;
-				EstadoVerificacionDetalle = msg;
+				if (_capturandoRegistro)
+				{
+					EstadoRegistro = "Error del sensor";
+					EstadoRegistroDetalle = msg;
+				}
+				else
+				{
+					EstadoVerificacion = "Error del sensor";
+					EstadoVerificacionDetalle = msg;
+				}
 			});
 		};
+		// Solo se puede verificar con el sensor conectado
 		VerificarHuellaCommand = new RelayCommand(async (object? _) =>
 		{
 			await VerificarHuella();
-		});
+		}, (object? _) => SensorConectado);
 		AbrirRegistroModalCommand = new RelayCommand((object? _) =>
 		{
 			PrepararNuevoRegistro();
@@ -677,7 +803,7 @@ public class MainViewModel : BaseViewModel
 		CapturarHuellaRegistroCommand = new RelayCommand(async (object? _) =>
 		{
 			await CapturarHuellaParaRegistro();
-		});
+		}, (object? _) => SensorConectado && !_capturandoRegistro);
 		ActualizarDatosCommand = new RelayCommand(async (object? _) =>
 		{
 			await CargarDatos();
@@ -702,14 +828,15 @@ public class MainViewModel : BaseViewModel
 		{
 			VistaActual = "Operaciones";
 		});
+		// "Agregar" solo si la persona no tiene requisitoria activa; "Editar" solo si tiene una
 		AbrirAgregarRequisitoriaCommand = new RelayCommand((object? _) =>
 		{
 			AbrirAgregarRequisitoria();
-		});
+		}, (object? _) => PersonaSeleccionada != null && (PersonaSeleccionada.Requisitoria == null || !PersonaSeleccionada.Requisitoria.Activa));
 		AbrirEditarRequisitoriaCommand = new RelayCommand((object? _) =>
 		{
 			AbrirEditarRequisitoria();
-		});
+		}, (object? _) => PersonaSeleccionada?.Requisitoria != null);
 		GuardarRequisitoriaCommand = new RelayCommand(async (object? _) =>
 		{
 			await GuardarRequisitoria();
@@ -729,6 +856,7 @@ public class MainViewModel : BaseViewModel
 			{
 				_fp.Inicializar();
 				SensorConectado = _fp.SensorConectado();
+				ActualizarEstadoInicialVerificacion();
 			});
 			await CargarDatos();
 		});
@@ -742,6 +870,7 @@ public class MainViewModel : BaseViewModel
 			Application.Current.Dispatcher.Invoke(() =>
 			{
 				Personas = new ObservableCollection<Persona>(personas);
+				PersonasRecientes = new ObservableCollection<Persona>(personas.OrderByDescending((Persona p) => p.FechaRegistro).Take(5));
 			});
 			TotalRegistrados = await _db.ContarRegistrados();
 			TotalRequisitorias = await _db.ContarConRequisitoria();
@@ -784,6 +913,11 @@ public class MainViewModel : BaseViewModel
 						Percentage = ((maxMot > 0) ? ((double)x.Cantidad / (double)maxMot * 100.0) : 0.0),
 						Color = "#B88A4A"
 					});
+				// Indicadores para mostrar "sin datos" en lugar de graficos en cero
+				HayRegistrosPorMes = regPorMes.Any(((string Mes, int Cantidad) x) => x.Cantidad > 0);
+				HayVerificacionesPorDia = verPorDia.Any(((string Dia, int Cantidad) x) => x.Cantidad > 0);
+				HayRegistrosPorMotivo = RegistrosPorMotivo.Count > 0;
+				CommandManager.InvalidateRequerySuggested();
 			});
 		}
 		catch (Exception)
@@ -873,17 +1007,30 @@ public class MainViewModel : BaseViewModel
 	private async Task CapturarHuellaParaRegistro()
 	{
 		ModoVerificacionActivo = false;
-		EstadoVerificacion = "Iniciando registro de huella...";
-		EstadoVerificacionDetalle = "Se requieren 3 capturas del mismo dedo";
-		HuellaCapturaEventArgs e = await _fp.RegistrarHuella();
+		CapturaRegistroFallida = false;
+		MensajeRegistro = string.Empty;
+		_capturandoRegistro = true;
+		CommandManager.InvalidateRequerySuggested();
+		EstadoRegistro = "Iniciando registro de huella...";
+		EstadoRegistroDetalle = "Se requieren 3 capturas del mismo dedo";
+		HuellaCapturaEventArgs? e;
+		try
+		{
+			e = await _fp.RegistrarHuella();
+		}
+		finally
+		{
+			_capturandoRegistro = false;
+			CommandManager.InvalidateRequerySuggested();
+		}
 		if (e != null)
 		{
 			_huellaTemporalTemplate = e.Template;
 			_huellaTemporalSize = e.TemplateSize;
 			Application.Current.Dispatcher.Invoke(() =>
 			{
-				EstadoVerificacion = "Huella capturada para registro";
-				EstadoVerificacionDetalle = "Complete los datos y presione Guardar";
+				EstadoRegistro = "Huella capturada";
+				EstadoRegistroDetalle = "Complete los datos y presione «Guardar registro»";
 			});
 		}
 		else
@@ -892,8 +1039,9 @@ public class MainViewModel : BaseViewModel
 			_huellaTemporalSize = 0;
 			Application.Current.Dispatcher.Invoke(() =>
 			{
-				EstadoVerificacion = "Error al capturar huella";
-				EstadoVerificacionDetalle = "Intente nuevamente";
+				EstadoRegistro = "Error al capturar huella";
+				EstadoRegistroDetalle = "Intente nuevamente";
+				CapturaRegistroFallida = true;
 			});
 		}
 	}
@@ -910,26 +1058,37 @@ public class MainViewModel : BaseViewModel
 		}
 	}
 
-	private async Task RegistrarPersona()
+	/// <summary>Valida DNI y nombre; si hay error lo deja en MensajeRegistro.</summary>
+	private bool ValidarDatosRegistro()
 	{
 		if (string.IsNullOrWhiteSpace(RegDNI) || RegDNI.Length != 8 || !RegDNI.All(char.IsDigit))
 		{
-			MessageBox.Show("El DNI debe tener exactamente 8 digitos numericos.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-			return;
+			MensajeRegistro = "El DNI debe tener exactamente 8 dígitos numéricos.";
+			return false;
 		}
 		if (string.IsNullOrWhiteSpace(RegNombre))
 		{
-			MessageBox.Show("Ingrese el nombre completo.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRegistro = "Ingrese el nombre completo.";
+			return false;
+		}
+		MensajeRegistro = string.Empty;
+		return true;
+	}
+
+	private async Task RegistrarPersona()
+	{
+		if (!ValidarDatosRegistro())
+		{
 			return;
 		}
 		if (_huellaTemporalTemplate == null || _huellaTemporalTemplate.Length == 0)
 		{
-			MessageBox.Show("Primero capture la huella presionando 'Registrar'.\nSe requieren 3 capturas del mismo dedo.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRegistro = "Capture la huella con «Capturar huella» antes de guardar (3 capturas del mismo dedo).";
 			return;
 		}
 		if (await _db.BuscarPorDNI(RegDNI) != null)
 		{
-			MessageBox.Show("Ya existe una persona registrada con DNI " + RegDNI + ".", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRegistro = "Ya existe una persona registrada con DNI " + RegDNI + ".";
 			return;
 		}
 		List<Persona> list = await _db.ObtenerPersonasConHuella();
@@ -940,7 +1099,7 @@ public class MainViewModel : BaseViewModel
 			{
 				Persona persona = list.FirstOrDefault((Persona p) => p.Id == personaId);
 				string value = ((persona != null) ? ("DNI: " + persona.DNI + " — " + persona.NombreCompleto) : $"ID: {personaId}");
-				MessageBox.Show($"Esta huella ya esta registrada en el sistema.\n\nPersona encontrada: {value}\nCoincidencia: {num} puntos\n\nNo se puede registrar la misma huella dos veces.", "Huella Duplicada", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+				MensajeRegistro = $"Esta huella ya está registrada ({value}, coincidencia {num} puntos). No se puede registrar la misma huella dos veces.";
 				_fp.EncenderLuzRoja();
 				await Task.Delay(1500);
 				_fp.ApagarLuces();
@@ -959,8 +1118,6 @@ public class MainViewModel : BaseViewModel
 		};
 		await _db.RegistrarPersona(persona2);
 		LimpiarFormulario();
-		EstadoVerificacion = "Persona registrada exitosamente";
-		EstadoVerificacionDetalle = "DNI " + persona2.DNI + " guardado en el sistema";
 		MessageBox.Show("Persona registrada exitosamente.", "Exito", MessageBoxButton.OK, MessageBoxImage.Asterisk);
 		await CargarDatos();
 		RegistroModalCierreSolicitado?.Invoke();
@@ -970,8 +1127,18 @@ public class MainViewModel : BaseViewModel
 	{
 		CancelarEdicion();
 		ModoVerificacionActivo = false;
-		EstadoVerificacion = "Registro";
-		EstadoVerificacionDetalle = "Capture la huella y complete los datos";
+		CapturaRegistroFallida = false;
+		MensajeRegistro = string.Empty;
+		if (SensorConectado)
+		{
+			EstadoRegistro = "Nuevo registro";
+			EstadoRegistroDetalle = "Capture la huella y complete los datos";
+		}
+		else
+		{
+			EstadoRegistro = "Sensor desconectado";
+			EstadoRegistroDetalle = "Conecte el lector ZK4500 para capturar la huella";
+		}
 		RegistroModalSolicitado?.Invoke();
 	}
 
@@ -990,27 +1157,23 @@ public class MainViewModel : BaseViewModel
 		RegObservaciones = PersonaSeleccionada.Observaciones;
 		_huellaTemporalTemplate = PersonaSeleccionada.HuellaTemplate;
 		_huellaTemporalSize = PersonaSeleccionada.HuellaTemplateSize;
-		EstadoVerificacion = "Modo edicion";
-		EstadoVerificacionDetalle = "Editando: " + PersonaSeleccionada.NombreCompleto;
+		CapturaRegistroFallida = false;
+		MensajeRegistro = string.Empty;
+		EstadoRegistro = "Editando registro";
+		EstadoRegistroDetalle = "Puede volver a capturar la huella si es necesario";
 		RegistroModalSolicitado?.Invoke();
 	}
 
 	private async Task ActualizarPersona()
 	{
-		if (string.IsNullOrWhiteSpace(RegDNI) || RegDNI.Length != 8 || !RegDNI.All(char.IsDigit))
+		if (!ValidarDatosRegistro())
 		{
-			MessageBox.Show("El DNI debe tener exactamente 8 digitos numericos.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-			return;
-		}
-		if (string.IsNullOrWhiteSpace(RegNombre))
-		{
-			MessageBox.Show("Ingrese el nombre completo.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
 			return;
 		}
 		Persona persona = await _db.BuscarPorDNI(RegDNI);
 		if (persona != null && persona.Id != _editandoPersonaId)
 		{
-			MessageBox.Show("Ya existe otra persona registrada con DNI " + RegDNI + ".", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRegistro = "Ya existe otra persona registrada con DNI " + RegDNI + ".";
 			return;
 		}
 		Persona persona2 = new Persona
@@ -1027,8 +1190,6 @@ public class MainViewModel : BaseViewModel
 			await _db.ActualizarHuellaPersona(_editandoPersonaId, _huellaTemporalTemplate, _huellaTemporalSize);
 		}
 		CancelarEdicion();
-		EstadoVerificacion = "Persona actualizada";
-		EstadoVerificacionDetalle = "DNI " + persona2.DNI + " actualizado correctamente";
 		MessageBox.Show("Persona actualizada exitosamente.", "Exito", MessageBoxButton.OK, MessageBoxImage.Asterisk);
 		await CargarDatos();
 		RegistroModalCierreSolicitado?.Invoke();
@@ -1055,8 +1216,6 @@ public class MainViewModel : BaseViewModel
 				}
 				PersonaSeleccionada = null;
 				ResultadoVisible = false;
-				EstadoVerificacion = "Persona eliminada";
-				EstadoVerificacionDetalle = "Registro eliminado del sistema";
 				MessageBox.Show("Persona eliminada exitosamente.", "Eliminado", MessageBoxButton.OK, MessageBoxImage.Asterisk);
 				await CargarDatos();
 			}
@@ -1092,10 +1251,11 @@ public class MainViewModel : BaseViewModel
 		}
 		else if (PersonaSeleccionada.Requisitoria != null && PersonaSeleccionada.Requisitoria.Activa)
 		{
-			MessageBox.Show($"Esta persona ya tiene una requisitoria activa.\n\nDelito: {PersonaSeleccionada.Requisitoria.Delito}\nJuzgado: {PersonaSeleccionada.Requisitoria.Juzgado}\n\nUse 'Editar Req.' para modificarla o 'Eliminar' para darla de baja.", "Requisitoria Existente", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+			MessageBox.Show($"Esta persona ya tiene una requisitoria activa.\n\nDelito: {PersonaSeleccionada.Requisitoria.Delito}\nJuzgado: {PersonaSeleccionada.Requisitoria.Juzgado}\n\nUse «Editar requisitoria» para modificarla o darla de baja.", "Requisitoria existente", MessageBoxButton.OK, MessageBoxImage.Asterisk);
 		}
 		else
 		{
+			MensajeRequisitoria = string.Empty;
 			ModoEdicionRequisitoria = false;
 			_reqPersonaId = PersonaSeleccionada.Id;
 			_reqEditandoId = 0;
@@ -1119,9 +1279,10 @@ public class MainViewModel : BaseViewModel
 		}
 		if (PersonaSeleccionada.Requisitoria == null)
 		{
-			MessageBox.Show("Esta persona no tiene requisitoria registrada.\nUse 'Agregar Req.' para crear una.", "Requisitoria", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+			MessageBox.Show("Esta persona no tiene requisitoria registrada.\nUse «Agregar requisitoria» para crear una.", "Requisitoria", MessageBoxButton.OK, MessageBoxImage.Asterisk);
 			return;
 		}
+		MensajeRequisitoria = string.Empty;
 		ModoEdicionRequisitoria = true;
 		_reqPersonaId = PersonaSeleccionada.Id;
 		_reqEditandoId = PersonaSeleccionada.Requisitoria.Id;
@@ -1138,19 +1299,20 @@ public class MainViewModel : BaseViewModel
 	{
 		if (string.IsNullOrWhiteSpace(ReqDelito))
 		{
-			MessageBox.Show("Ingrese el delito.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRequisitoria = "Ingrese el delito.";
 			return;
 		}
 		if (string.IsNullOrWhiteSpace(ReqJuzgado))
 		{
-			MessageBox.Show("Ingrese el juzgado.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRequisitoria = "Ingrese el juzgado.";
 			return;
 		}
 		if (string.IsNullOrWhiteSpace(ReqExpediente))
 		{
-			MessageBox.Show("Ingrese el numero de expediente.", "Validacion", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+			MensajeRequisitoria = "Ingrese el número de expediente.";
 			return;
 		}
+		MensajeRequisitoria = string.Empty;
 		try
 		{
 			if (ModoEdicionRequisitoria && _reqEditandoId > 0)
@@ -1226,6 +1388,7 @@ public class MainViewModel : BaseViewModel
 	{
 		PanelRequisitoriaVisible = false;
 		ModoEdicionRequisitoria = false;
+		MensajeRequisitoria = string.Empty;
 		_reqPersonaId = 0;
 		_reqEditandoId = 0;
 		LimpiarFormularioRequisitoria();

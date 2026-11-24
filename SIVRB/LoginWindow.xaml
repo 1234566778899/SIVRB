@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Window x:Class="SIVRB.Views.LoginWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:ViewModels;assembly=ViewModels" Title="SIVRB - Iniciar Sesion" Height="560" Width="440" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="#00FFFFFF" FontFamily="Segoe UI" xmlns:views="clr-namespace:SIVRB.Views;assembly=SIVRB">
+<Window x:Class="SIVRB.Views.LoginWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:vm="clr-namespace:ViewModels;assembly=ViewModels" Title="SIVRB - Iniciar sesión" Height="560" Width="440" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="#00FFFFFF" FontFamily="Segoe UI" xmlns:views="clr-namespace:SIVRB.Views;assembly=SIVRB">
   <FrameworkElement.DataContext>
     <vm:LoginViewModel />
   </FrameworkElement.DataContext>
@@ -18,7 +18,7 @@
             </Border>
             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
               <TextBlock Text="SIVRB" Foreground="#FFFFFFFF" FontSize="14" FontWeight="Bold" />
-              <TextBlock Text="Sistema de Verificación Biométrica" Foreground="#FFFFFFA0" FontSize="10" />
+              <TextBlock Text="Sistema de Verificación Biométrica" Foreground="#FFFFFFA0" FontSize="11" />
             </StackPanel>
           </StackPanel>
         </Border>
@@ -26,13 +26,13 @@
       <StackPanel Grid.Row="1" Margin="40,32,40,0">
         <TextBlock Text="Iniciar sesión" Foreground="{StaticResource Negro}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
         <TextBlock Text="Ingrese sus credenciales para continuar" Foreground="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Center" Margin="0,4,0,24" />
-        <TextBlock Text="USUARIO" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5" />
+        <TextBlock Text="USUARIO" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,5" />
         <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8" Padding="2">
-          <TextBox Background="#00FFFFFF" Foreground="{StaticResource Negro}" BorderThickness="0" Padding="12,9" FontSize="12" CaretBrush="{StaticResource Negro}" MaxLength="50" Text="{Binding NombreUsuario, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBox materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" Background="#00FFFFFF" Foreground="{StaticResource Negro}" BorderThickness="0" Padding="12,9" FontSize="12" CaretBrush="{StaticResource Negro}" MaxLength="50" Text="{Binding NombreUsuario, UpdateSourceTrigger=PropertyChanged}" />
         </Border>
-        <TextBlock Text="CONTRASEÑA" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" Margin="0,14,0,5" />
+        <TextBlock Text="CONTRASEÑA" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" Margin="0,14,0,5" />
         <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8" Padding="2">
-          <PasswordBox Name="PasswordField" Background="#00FFFFFF" Foreground="{StaticResource Negro}" BorderThickness="0" Padding="12,9" FontSize="12" CaretBrush="{StaticResource Negro}" MaxLength="100" PasswordChanged="PasswordField_PasswordChanged" KeyDown="PasswordField_KeyDown" />
+          <PasswordBox Name="PasswordField" materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" Background="#00FFFFFF" Foreground="{StaticResource Negro}" BorderThickness="0" Padding="12,9" FontSize="12" CaretBrush="{StaticResource Negro}" MaxLength="100" PasswordChanged="PasswordField_PasswordChanged" KeyDown="PasswordField_KeyDown" />
         </Border>
         <Border Background="{StaticResource DangerBg}" BorderBrush="#F0BAB6" BorderThickness="1" CornerRadius="6" Padding="10,7" Margin="0,12,0,0">
           <FrameworkElement.Style>
@@ -48,13 +48,13 @@
           <TextBlock Foreground="{StaticResource Danger}" FontSize="11" TextWrapping="Wrap" Text="{Binding MensajeError}" />
         </Border>
         <Button Style="{StaticResource BtnMain}" Margin="0,20,0,0" Padding="0,11" Command="{Binding LoginCommand}">
-          <TextBlock Text="Iniciar Sesión" FontSize="13" FontWeight="Bold" />
+          <TextBlock Text="Iniciar sesión" FontSize="13" FontWeight="Bold" />
         </Button>
-        <TextBlock Text="Verificando..." Foreground="{StaticResource Muted}" FontSize="10" HorizontalAlignment="Center" Margin="0,10,0,0" Visibility="{Binding Cargando, Converter={StaticResource BoolToVis}}" />
-        <Button Margin="0,12,0,0" HorizontalAlignment="Center" Cursor="Hand" Click="BtnSalir_Click">
+        <TextBlock Text="Verificando..." Foreground="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Center" Margin="0,10,0,0" Visibility="{Binding Cargando, Converter={StaticResource BoolToVis}}" />
+        <Button Style="{x:Null}" Margin="0,12,0,0" HorizontalAlignment="Center" Cursor="Hand" Click="BtnSalir_Click">
           <Control.Template>
             <ControlTemplate TargetType="{x:Type Button}">
-              <TextBlock Name="Txt" Text="Salir" Foreground="{StaticResource Muted}" FontSize="11" />
+              <TextBlock Name="Txt" Text="Salir" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" />
               <ControlTemplate.Triggers>
                 <Trigger Property="UIElement.IsMouseOver" Value="True">
                   <Setter TargetName="Txt" Value="{StaticResource Danger}" Property="TextBlock.Foreground" />
@@ -70,8 +70,8 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBlock Text="DIOS, PATRIA Y LEY" Foreground="#FFFFFF80" FontSize="9" FontWeight="SemiBold" />
-          <TextBlock Grid.Column="1" Text="PNP — SIVRB v1.0" Foreground="{StaticResource Dorado}" FontSize="9" FontWeight="Bold" />
+          <TextBlock Text="DIOS, PATRIA Y LEY" Foreground="#FFFFFF80" FontSize="10" FontWeight="SemiBold" />
+          <TextBlock Grid.Column="1" Text="PNP — SIVRB v1.0" Foreground="{StaticResource Dorado}" FontSize="10" FontWeight="Bold" />
         </Grid>
       </Border>
     </Grid>

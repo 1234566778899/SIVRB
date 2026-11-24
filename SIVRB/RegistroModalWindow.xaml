@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Window x:Class="SIVRB.Views.RegistroModalWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Registro" Height="700" Width="580" MinHeight="640" MinWidth="520" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="{StaticResource Bg}" FontFamily="Segoe UI" xmlns:views="clr-namespace:SIVRB.Views;assembly=SIVRB">
+<Window x:Class="SIVRB.Views.RegistroModalWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="SIVRB - Registro de persona" Height="700" Width="580" MinHeight="640" MinWidth="520" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="{StaticResource Bg}" FontFamily="Segoe UI" xmlns:views="clr-namespace:SIVRB.Views;assembly=SIVRB">
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -9,11 +9,11 @@
       <Border BorderBrush="{StaticResource Dorado}" BorderThickness="0,0,0,3" Padding="20,12">
         <StackPanel Orientation="Horizontal">
           <Border Width="34" Height="34" Background="{StaticResource Dorado}" CornerRadius="17" VerticalAlignment="Center">
-            <TextBlock Text="PNP" Foreground="{StaticResource VerdeDk}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <TextBlock Text="PNP" Foreground="{StaticResource VerdeDk}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Border>
           <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
             <TextBlock Foreground="#FFFFFFFF" FontSize="14" FontWeight="Bold" Text="{Binding TituloFormulario}" />
-            <TextBlock Text="Registro biométrico" Foreground="#FFFFFFA0" FontSize="10" />
+            <TextBlock Text="Registro biométrico" Foreground="#FFFFFFA0" FontSize="11" />
           </StackPanel>
         </StackPanel>
       </Border>
@@ -26,40 +26,51 @@
         </Grid.RowDefinitions>
         <ScrollViewer Grid.Row="0" Margin="0,0,0,14" VerticalScrollBarVisibility="Auto">
           <StackPanel>
-            <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="10" Padding="12">
+            <!-- ===== Panel de captura (diseno segun mockup) ===== -->
+            <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="12" Padding="16,14">
               <Grid>
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                  <TextBlock Text="CAPTURA" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" />
-                  <TextBlock Foreground="{StaticResource Negro}" FontSize="13" FontWeight="Bold" Margin="0,4,0,2" Text="{Binding EstadoVerificacion}" />
-                  <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Text="{Binding EstadoVerificacionDetalle}" />
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock Text="CAPTURA" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" />
+                  <TextBlock Foreground="{StaticResource Negro}" FontSize="14" FontWeight="Bold" Margin="0,4,0,2" TextWrapping="Wrap" Text="{Binding EstadoRegistro}" />
+                  <TextBlock Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Text="{Binding EstadoRegistroDetalle}" />
                 </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource BtnGhost}" Margin="14,0,0,0" VerticalAlignment="Center" Content="Capturar huella" Command="{Binding CapturarHuellaRegistroCommand}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                  <Button Style="{StaticResource BtnGhost}" Padding="18,10" FontSize="13" Content="Capturar huella" Command="{Binding CapturarHuellaRegistroCommand}" />
+                  <!-- Solo aparece si la ultima captura fallo; repite la captura -->
+                  <Button Style="{StaticResource BtnGhost}" Padding="18,10" FontSize="13" Margin="10,0,0,0" Content="Reintentar" Command="{Binding CapturarHuellaRegistroCommand}" Visibility="{Binding CapturaRegistroFallida, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
               </Grid>
             </Border>
             <Border Margin="0,12,0,0" Padding="10" Background="{StaticResource WarnBg}" BorderBrush="{StaticResource WarnBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding ModoEdicion, Converter={StaticResource BoolToVis}}">
               <TextBlock Text="Modo edición activo" Foreground="{StaticResource Warn}" FontSize="11" FontWeight="SemiBold" />
             </Border>
-            <TextBlock Text="DNI" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" Margin="0,16,0,5" />
+            <TextBlock Text="DNI" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" Margin="0,16,0,5" />
             <TextBox Name="TxtDNI" Style="{StaticResource PnpTextBox}" MaxLength="8" FontFamily="Consolas" Text="{Binding RegDNI, UpdateSourceTrigger=PropertyChanged}" PreviewTextInput="TxtDNI_PreviewTextInput" DataObject.Pasting="TxtDNI_Pasting" />
-            <TextBlock Text="NOMBRE COMPLETO" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" Margin="0,12,0,5" />
+            <TextBlock Text="NOMBRE COMPLETO" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" Margin="0,12,0,5" />
             <TextBox Style="{StaticResource PnpTextBox}" Text="{Binding RegNombre, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock Text="MOTIVO" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" Margin="0,12,0,5" />
+            <TextBlock Text="MOTIVO" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" Margin="0,12,0,5" />
             <ComboBox Style="{StaticResource PnpCombo}" ItemsSource="{Binding MotivosRegistro}" SelectedItem="{Binding RegMotivo}" />
-            <TextBlock Text="OBSERVACIONES" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="Bold" Margin="0,12,0,5" />
+            <TextBlock Text="OBSERVACIONES" Foreground="{StaticResource Muted}" FontSize="11" FontWeight="Bold" Margin="0,12,0,5" />
             <TextBox Style="{StaticResource PnpTextBox}" Height="90" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding RegObservaciones, UpdateSourceTrigger=PropertyChanged}" />
           </StackPanel>
         </ScrollViewer>
         <Grid Row="1">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <Button Grid.Column="0" Style="{StaticResource BtnMain}" Padding="0,10" Margin="0,0,8,0" Command="{Binding RegistrarPersonaCommand}" Content="{Binding TextoBotonGuardar}" />
-          <Button Grid.Column="1" Style="{StaticResource BtnGhost}" Padding="20,10" Content="Cerrar" Click="CloseButton_Click" />
+          <!-- Errores de validacion dentro del formulario (antes eran ventanas emergentes) -->
+          <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource InlineErrorText}" Margin="0,0,0,10" Text="{Binding MensajeRegistro}" />
+          <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource BtnMain}" Padding="0,10" Margin="0,0,8,0" Command="{Binding RegistrarPersonaCommand}" Content="{Binding TextoBotonGuardar}" />
+          <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource BtnGhost}" Padding="20,10" Content="Cerrar" Click="CloseButton_Click" />
         </Grid>
       </Grid>
     </Border>

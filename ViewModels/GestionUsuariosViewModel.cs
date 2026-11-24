@@ -170,7 +170,7 @@ public class GestionUsuariosViewModel : BaseViewModel
 			{
 				Mensaje = "No se puede eliminar al administrador principal";
 			}
-			else if (MessageBox.Show("Eliminar al usuario '" + usuario.NombreUsuario + "'?", "Confirmar eliminacion", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
+			else if (MessageBox.Show("¿Eliminar al usuario '" + usuario.NombreUsuario + "'?\n\nEsta acción no se puede deshacer.", "Confirmar eliminación", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
 			{
 				await _db.EliminarUsuario(usuario.Id);
 				Mensaje = "Usuario '" + usuario.NombreUsuario + "' eliminado";

@@ -8,6 +8,8 @@
       </ResourceDictionary.MergedDictionaries>
       <BooleanToVisibilityConverter x:Key="BoolToVis" />
       <h:PercentageConverter x:Key="Pct" />
+      <h:PercentToStarConverter x:Key="PctStar" />
+      <h:InverseBoolToVisibilityConverter x:Key="InvBoolToVis" />
       <Color x:Key="VerdeColor">#279448</Color>
       <Color x:Key="VerdeDkColor">#1A6B32</Color>
       <Color x:Key="VerdeLkColor">#EDFAF2</Color>
@@ -37,6 +39,30 @@
       <SolidColorBrush x:Key="SidebarItemMute" Color="#6A9A72" />
       <SolidColorBrush x:Key="WarnBorder" Color="#F0D070" />
       <SolidColorBrush x:Key="WarnPill" Color="#FDE68A" />
+      <!-- Error de validacion dentro de un formulario (reemplaza los MessageBox); se oculta si no hay texto -->
+      <Style x:Key="InlineErrorText" TargetType="{x:Type TextBlock}">
+        <Setter Property="Foreground" Value="{StaticResource Danger}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Style.Triggers>
+          <Trigger Property="Text" Value="">
+            <Setter Property="Visibility" Value="Collapsed" />
+          </Trigger>
+          <Trigger Property="Text" Value="{x:Null}">
+            <Setter Property="Visibility" Value="Collapsed" />
+          </Trigger>
+        </Style.Triggers>
+      </Style>
+      <!-- Texto para estados vacios ("Aun no hay datos") -->
+      <Style x:Key="EmptyStateText" TargetType="{x:Type TextBlock}">
+        <Setter Property="Foreground" Value="{StaticResource Muted}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+      </Style>
       <Style x:Key="BtnMain" TargetType="{x:Type Button}">
         <Setter Property="Background" Value="{StaticResource Verde}" />
         <Setter Property="Foreground" Value="#FFFFFFFF" />
@@ -151,23 +177,20 @@
           <Setter.Value>
             <ControlTemplate TargetType="{x:Type ComboBox}">
               <Grid>
-                <ToggleButton Name="ToggleButton" Focusable="False" ClickMode="Press" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                <!-- Fondo y borde a nivel del control: ocupa todo el ancho, igual que los TextBox -->
+                <Border Name="cBd" BorderThickness="1" CornerRadius="8" Background="{StaticResource Bg}" BorderBrush="{StaticResource Border}" />
+                <!-- Area clicable transparente que cubre todo el control -->
+                <!-- Style={x:Null}: evita el estilo implicito de MaterialDesign (tamano fijo y centrado) -->
+                <ToggleButton Name="ToggleButton" Style="{x:Null}" Focusable="False" ClickMode="Press" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                   <Control.Template>
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
-                      <Border Name="cBd" BorderThickness="1" CornerRadius="8" Padding="12,8" Background="{StaticResource Bg}" BorderBrush="{StaticResource Border}">
-                        <Grid>
-                          <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                          </Grid.ColumnDefinitions>
-                          <ContentPresenter Grid.Column="0" />
-                          <TextBlock Grid.Column="1" Text="" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{StaticResource Muted}" />
-                        </Grid>
-                      </Border>
+                      <Border Background="#00FFFFFF" />
                     </ControlTemplate>
                   </Control.Template>
                 </ToggleButton>
-                <ContentPresenter Name="ContentSite" IsHitTestVisible="False" Content="{TemplateBinding ComboBox.SelectionBoxItem}" ContentTemplate="{TemplateBinding ComboBox.SelectionBoxItemTemplate}" Margin="14,9,30,9" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                <!-- Margen = borde (1) + padding (12,8) de PnpTextBox: misma altura y posicion del texto -->
+                <ContentPresenter Name="ContentSite" IsHitTestVisible="False" Content="{TemplateBinding ComboBox.SelectionBoxItem}" ContentTemplate="{TemplateBinding ComboBox.SelectionBoxItemTemplate}" Margin="13,9,32,9" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,13,0" Foreground="{StaticResource Muted}" />
                 <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding ComboBox.IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                   <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding FrameworkElement.ActualWidth}" MaxHeight="{TemplateBinding ComboBox.MaxDropDownHeight}">
                     <Border BorderThickness="1" CornerRadius="8" Margin="0,2,0,0" Background="{StaticResource BgCard}" BorderBrush="{StaticResource Border}">
@@ -178,6 +201,14 @@
                   </Grid>
                 </Popup>
               </Grid>
+              <ControlTemplate.Triggers>
+                <Trigger Property="UIElement.IsMouseOver" Value="True">
+                  <Setter TargetName="cBd" Property="Border.BorderBrush" Value="{StaticResource Verde}" />
+                </Trigger>
+                <Trigger Property="ComboBox.IsDropDownOpen" Value="True">
+                  <Setter TargetName="cBd" Property="Border.BorderBrush" Value="{StaticResource Verde}" />
+                </Trigger>
+              </ControlTemplate.Triggers>
             </ControlTemplate>
           </Setter.Value>
         </Setter>
@@ -218,10 +249,10 @@
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
                   <DatePickerTextBox Name="PART_TextBox" Background="#00FFFFFF" BorderThickness="0" FontSize="12" VerticalAlignment="Center" Focusable="{TemplateBinding UIElement.Focusable}" Foreground="{StaticResource Negro}" />
-                  <Button Name="PART_Button" Grid.Column="1" Focusable="False" VerticalAlignment="Center">
+                  <Button Name="PART_Button" Style="{x:Null}" Grid.Column="1" Focusable="False" VerticalAlignment="Center">
                     <Control.Template>
                       <ControlTemplate TargetType="{x:Type Button}">
-                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="8,0,0,0" Foreground="{StaticResource Muted}" />
+                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Muted}" />
                       </ControlTemplate>
                     </Control.Template>
                   </Button>
